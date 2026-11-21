@@ -70,7 +70,7 @@ Edits to a workflow file run that workflow. Edits to `.github/scripts/ssh-deploy
 
 ### Prepare the VM once
 
-Use a Linux VM with systemd, `curl`, `rsync`, and a Python 3.12 virtual environment with pip at `/srv/devlab/.venv`. The VM needs outbound access to PyPI and must be reachable from the GitHub Actions runner over SSH on port `22`. The SSH account needs write access to `/var/www/devlab/`, `/srv/devlab/`, and the virtual environment. The VM's web server needs read access to the frontend files and permission to traverse `/var/www/devlab/`. Install the public half of `DEPLOY_SSH_KEY` in the deploy user's `~/.ssh/authorized_keys`.
+Use a Linux VM with systemd, `curl`, `rsync`, and a Python 3.12 virtual environment at `/srv/devlab/.venv`. The backend workflow installs pip from a bundled wheel if the environment needs it. The VM needs outbound access to PyPI for runtime dependencies and must be reachable from the GitHub Actions runner over SSH on port `22`. The SSH account needs write access to `/var/www/devlab/`, `/srv/devlab/`, and the virtual environment. The VM's web server needs read access to the frontend files and permission to traverse `/var/www/devlab/`. Install the public half of `DEPLOY_SSH_KEY` in the deploy user's `~/.ssh/authorized_keys`.
 
 On the VM, replace `your-deploy-user` with the account in `DEPLOY_USER` and enable lingering so the app stays running after SSH disconnects and starts again after a reboot.
 

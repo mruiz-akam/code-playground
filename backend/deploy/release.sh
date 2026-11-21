@@ -32,6 +32,23 @@ cleanup() {
 trap cleanup EXIT
 
 tar --no-same-owner -xzf - -C "$release_dir"
+
+if ! "$venv_python" -m pip --version >/dev/null 2>&1; then
+  set -- "$release_dir"/pip-bootstrap/pip-*.whl
+  if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
+    echo 'The release must include one pip bootstrap wheel when the VM virtual environment lacks pip.' >&2
+    exit 1
+  fi
+
+  echo "Installing pip in $app_dir/.venv."
+  if ! PYTHONPATH="$1" "$venv_python" -m pip --isolated --disable-pip-version-check \
+    install --no-index --no-deps --ignore-installed "$1"; then
+    echo "Could not install pip in $app_dir/.venv. Check that the SSH deploy user can write to it." >&2
+    exit 1
+  fi
+fi
+
+rm -rf -- "$release_dir/pip-bootstrap"
 mkdir -p "$unit_dir"
 
 install_dependencies() {

@@ -38,6 +38,10 @@ jobs:
         working-directory: backend
         run: python -m pytest -q
 
+      - name: Download pip bootstrap wheel
+        run: |
+          python -m pip download --only-binary=:all: --no-deps --dest "$RUNNER_TEMP/pip-bootstrap" pip==26.3
+
       - name: Release backend to /srv/devlab
         shell: bash
         env:
@@ -46,5 +50,7 @@ jobs:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
         run: |
-          tar --exclude='__pycache__' -C backend -czf - app requirements.txt deploy/support-ticket-queue.service |
+          tar --exclude='__pycache__' -czf - \
+            -C backend app requirements.txt deploy/support-ticket-queue.service \
+            -C "$RUNNER_TEMP" pip-bootstrap |
             bash .github/scripts/ssh-deploy.sh backend/deploy/release.sh
