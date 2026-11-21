@@ -50,7 +50,7 @@ The frontend suite simulates API responses. The backend suite uses a temporary S
 
 ## CI and deployment
 
-GitHub Actions deploys to the `devlab` lab environment. Pushes and merges to `main` run the workflows that match the changed files. A change to both components runs both workflows.
+GitHub Actions deploys to the `devlab` lab environment from both `dev` and `main`. Pushes and merges to either branch run the workflows that match the changed files. A change to both components runs both workflows.
 
 | Changed files | Workflow | What it does |
 | --- | --- | --- |
