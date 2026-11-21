@@ -72,11 +72,13 @@ Edits to a workflow file run that workflow. Edits to `.github/scripts/ssh-deploy
 
 Use a Linux VM with systemd, `curl`, `rsync`, and a Python 3.12 virtual environment at `/srv/devlab/.venv`. The backend workflow installs pip from a bundled wheel if the environment needs it. The VM needs outbound access to PyPI for runtime dependencies and must be reachable from the GitHub Actions runner over SSH on port `22`. The SSH account needs write access to `/var/www/devlab/`, `/srv/devlab/`, and the virtual environment. The VM's web server needs read access to the frontend files and permission to traverse `/var/www/devlab/`. Install the public half of `DEPLOY_SSH_KEY` in the deploy user's `~/.ssh/authorized_keys`.
 
-On the VM, replace `your-deploy-user` with the account in `DEPLOY_USER` and enable lingering so the app stays running after SSH disconnects and starts again after a reboot.
+On the VM, run the installer from a trusted checkout of this version before merging the deployment changes into `main`. It installs and enables the system-wide unit, which runs FastAPI as `deploy`. It grants the `deploy` account passwordless sudo to restart or stop this specific unit. The unit file and sudoers rule are owned by root.
 
 ```sh
-sudo loginctl enable-linger your-deploy-user
+sudo sh backend/deploy/install-system-service.sh
 ```
+
+For an existing deployment, the installer stops the legacy `deploy` user service and starts the system service with the current release. It restores the legacy service if the new service fails its checks. On a fresh VM, the first backend deployment starts the system service. After migration, `devlab` can check the service with `systemctl status support-ticket-queue.service --no-pager`.
 
 The backend listens on `127.0.0.1:8000`. Configure the VM's web server to serve `/var/www/devlab/` and forward `/api/` to FastAPI with the original request path. For Nginx, use these directives in the site's `server` block.
 
@@ -107,11 +109,11 @@ The `devlab` GitHub environment supplies these values.
 | Name | Stored as | Expected value |
 | --- | --- | --- |
 | `DEPLOY_HOST` | Secret | The VM hostname or IP address used for SSH |
-| `DEPLOY_USER` | Secret | The SSH account on the VM |
+| `DEPLOY_USER` | Secret | `deploy`, the SSH and FastAPI service account on the VM |
 | `DEPLOY_SSH_KEY` | Secret | The multiline private SSH key for that account, usable without an interactive passphrase |
 | `DEPLOY_KNOWN_HOSTS` | Variable | The verified `known_hosts` entry matching `DEPLOY_HOST`. Hashed entries work. |
 
-The backend workflow installs runtime dependencies into `/srv/devlab/.venv`. Systemd uses that environment to run FastAPI. After restarting the service, the workflow checks `/health` and `/api/tickets`. If deployment fails, it reapplies the previous release's requirements and restarts that release. The SQLite database lives at `/srv/devlab/data/tickets.sqlite3` across releases. To inspect the service on the VM as the deploy user, run `journalctl --user -u support-ticket-queue.service`. Open the site's web URL and create a test ticket to verify both deployments together.
+The backend workflow installs runtime dependencies into `/srv/devlab/.venv`. After restarting the system service, it checks `/health` and `/api/tickets`. If deployment fails, it reapplies the previous release's requirements and restarts that release. The SQLite database lives at `/srv/devlab/data/tickets.sqlite3` across releases. To inspect the service logs on the VM, run `sudo journalctl -u support-ticket-queue.service -n 50 --no-pager`. Open the site's web URL and create a test ticket to verify both deployments together.
 
 ## Candidate exercise
 

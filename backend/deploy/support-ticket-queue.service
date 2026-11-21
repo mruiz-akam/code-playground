@@ -4,6 +4,7 @@ After=network.target
 
 [Service]
 Type=exec
+User=deploy
 WorkingDirectory=/srv/devlab/current
 Environment=TICKET_DB_PATH=/srv/devlab/data/tickets.sqlite3
 Environment=PYTHONUNBUFFERED=1
@@ -12,4 +13,4 @@ Restart=on-failure
 RestartSec=3
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target

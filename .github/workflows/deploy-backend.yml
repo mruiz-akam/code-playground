@@ -51,6 +51,6 @@ jobs:
           DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
         run: |
           tar --exclude='__pycache__' -czf - \
-            -C backend app requirements.txt deploy/support-ticket-queue.service \
+            -C backend app requirements.txt \
             -C "$RUNNER_TEMP" pip-bootstrap |
             bash .github/scripts/ssh-deploy.sh backend/deploy/release.sh
