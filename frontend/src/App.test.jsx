@@ -38,6 +38,46 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+test('requires the access token before showing the ticket queue', async () => {
+  const user = userEvent.setup();
+  fetchMock
+    .mockResolvedValueOnce(new Response(null, {
+      status: 401,
+      headers: { 'X-Devlab-Allow-Http': '1' },
+    }))
+    .mockResolvedValueOnce(jsonResponse({}, 401))
+    .mockResolvedValueOnce(new Response(null, { status: 204 }))
+    .mockResolvedValueOnce(jsonResponse([openTicket]));
+
+  render(<App />);
+
+  const dialog = await screen.findByRole('dialog', { name: 'Enter your access token' });
+  expect(screen.queryByRole('heading', { name: 'New ticket' })).toBeNull();
+  const tokenInput = within(dialog).getByLabelText('Access token');
+  await user.type(tokenInput, 'wrong-token');
+  await user.click(within(dialog).getByRole('button', { name: 'Open queue' }));
+  expect(await screen.findByText('That access token is incorrect.')).toBeTruthy();
+
+  await user.clear(tokenInput);
+  await user.type(tokenInput, 'test-lab-access-token');
+  await user.click(within(dialog).getByRole('button', { name: 'Open queue' }));
+  expect(await screen.findByRole('heading', { name: openTicket.subject })).toBeTruthy();
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(fetchMock).toHaveBeenNthCalledWith(3, '/api/access', expect.objectContaining({
+    method: 'POST',
+    body: JSON.stringify({ token: 'test-lab-access-token' }),
+  }));
+});
+
+test('keeps the token field hidden on HTTP when the lab requires HTTPS', async () => {
+  fetchMock.mockResolvedValueOnce(jsonResponse({}, 401));
+
+  render(<App />);
+
+  expect(await screen.findByRole('link', { name: 'Open the lab over HTTPS' })).toBeTruthy();
+  expect(screen.queryByLabelText('Access token')).toBeNull();
+});
+
 test('loads the queue and displays each ticket status', async () => {
   fetchMock.mockResolvedValueOnce(jsonResponse([resolvedTicket, openTicket]));
 

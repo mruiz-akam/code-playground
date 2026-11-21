@@ -42,6 +42,11 @@ h1 {
   padding-block: 2rem 3rem;
 }
 
+.access-layout {
+  max-width: 29rem;
+  padding-block: 2rem 3rem;
+}
+
 .panel {
   min-width: 0;
   background: #fff;

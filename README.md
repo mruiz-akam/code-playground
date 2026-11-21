@@ -6,8 +6,11 @@ A full-stack interview starter. The React frontend lists support tickets and let
 
 Use Python 3.12 and Node.js 24 to match CI. From the repository root, start FastAPI in one terminal.
 
+Copy the example to `backend/.env` if you’re setting up the project for the first time. Enter the sample token `local-test-token` when the local queue prompts you.
+
 ```sh
 cd backend
+cp -n .env.example .env
 python3.12 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
@@ -54,7 +57,7 @@ GitHub Actions deploys to the `devlab` lab environment. Pushes and merges to `ma
 
 For an interview branch, push your changes and open **Actions**. Choose the relevant workflow, select **Run workflow**, and choose the branch agreed with your interviewer.
 
-Open the run for your commit to check the test and deployment results. A failing test stops deployment. After the relevant workflows succeed, verify your change on the deployed app at [http://devlab.labs.akamaicentral.com/](http://devlab.labs.akamaicentral.com/).
+Open the run for your commit to check the test and deployment results. A failing test stops deployment. After the relevant workflows succeed, verify your change using the access token provided by your interviewer. During the HTTP exercise, open [http://devlab.labs.akamaicentral.com/](http://devlab.labs.akamaicentral.com/) when HTTP access is enabled for the lab. Once HTTPS works, open [https://devlab.labs.akamaicentral.com/](https://devlab.labs.akamaicentral.com/) and enter the token there to start an HTTPS session.
 
 ## Check the backend on the VM
 
@@ -69,10 +72,10 @@ Run these commands on the VM. FastAPI listens on its loopback interface.
 ```sh
 systemctl status support-ticket-queue.service --no-pager
 curl -fsS http://127.0.0.1:8000/health
-curl -fsS http://127.0.0.1:8000/api/tickets
+curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8000/api/tickets
 ```
 
-Expect `active (running)` from systemd, `{"status":"ok"}` from the health endpoint, and a JSON list from the tickets endpoint.
+Expect `active (running)` from systemd, `{"status":"ok"}` from the health endpoint, and HTTP `401` for the ticket request without a session. To verify ticket data, enter the token at the lab URL provided by your interviewer.
 
 If you have sudo access, use this command to check the recent backend logs.
 

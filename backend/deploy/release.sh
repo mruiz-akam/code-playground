@@ -29,14 +29,25 @@ if ! sudo -n -l "$systemctl" restart "$service" >/dev/null ||
 fi
 
 release_dir=$(mktemp -d "$app_dir/releases/release.XXXXXXXX")
+env_file="$app_dir/.env"
+previous_env="$release_dir/.previous-env"
+env_replaced=no
 cleanup() {
-  if [ "$?" -ne 0 ] && [ "$(readlink "$current" || true)" != "$release_dir" ]; then
+  result=$?
+  rm -f -- "$release_dir/.env"
+  if [ "$result" -ne 0 ] && [ ! -f "$previous_env" ] &&
+    [ "$(readlink "$current" || true)" != "$release_dir" ]; then
     rm -rf -- "$release_dir"
   fi
 }
 trap cleanup EXIT
 
 tar --no-same-owner -xzf - -C "$release_dir"
+if [ ! -s "$release_dir/.env" ]; then
+  echo 'The release is missing the access token configuration.' >&2
+  exit 1
+fi
+chmod 600 "$release_dir/.env"
 
 if ! "$venv_python" -m pip --version >/dev/null 2>&1; then
   set -- "$release_dir"/pip-bootstrap/pip-*.whl
@@ -59,6 +70,14 @@ install_dependencies() {
   "$venv_python" -m pip --disable-pip-version-check install -r "$1/requirements.txt"
 }
 
+activate_access_env() {
+  if [ -f "$env_file" ]; then
+    install -m 600 "$env_file" "$previous_env" || return 1
+  fi
+  mv -Tf -- "$release_dir/.env" "$env_file" || return 1
+  env_replaced=yes
+}
+
 start_release() {
   ln -sfn -- "$1" "$app_dir/current.next" &&
     mv -Tf -- "$app_dir/current.next" "$current" &&
@@ -69,7 +88,6 @@ wait_for_app() {
   attempt=0
   while [ "$attempt" -lt 15 ]; do
     if curl --noproxy '*' -fs --max-time 2 http://127.0.0.1:8000/health >/dev/null &&
-      curl --noproxy '*' -fs --max-time 2 http://127.0.0.1:8000/api/tickets >/dev/null &&
       "$systemctl" is-active --quiet "$service"; then
       return 0
     fi
@@ -83,12 +101,25 @@ previous_release=$(readlink "$current" || true)
 
 if ! install_dependencies "$release_dir"; then
   echo 'Could not install dependencies for the new release.' >&2
-elif start_release "$release_dir" && wait_for_app; then
+elif activate_access_env && start_release "$release_dir" && wait_for_app &&
+  [ "$(curl --noproxy '*' -s --max-time 2 -o /dev/null -w '%{http_code}' \
+    http://127.0.0.1:8000/api/tickets)" = 401 ]; then
+  rm -f -- "$previous_env"
   echo 'Deployment healthy on port 8000.'
   exit 0
 else
   echo 'Deployment failed its startup checks.' >&2
   "$systemctl" status "$service" --no-pager --lines=15 >&2 || true
+fi
+
+if [ "$env_replaced" = yes ]; then
+  if [ -f "$previous_env" ]; then
+    mv -Tf -- "$previous_env" "$env_file"
+  else
+    rm -f -- "$env_file"
+  fi
+else
+  rm -f -- "$previous_env"
 fi
 
 if [ -n "$previous_release" ]; then

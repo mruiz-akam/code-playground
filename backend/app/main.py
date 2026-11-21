@@ -2,9 +2,10 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Literal
 
-from fastapi import FastAPI, Request, status
+from fastapi import APIRouter, Depends, FastAPI, Request, status
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.access import load_access_settings, require_access, router as access_router
 from app.database import connect, initialize
 
 
@@ -23,11 +24,14 @@ class Ticket(TicketCreate):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    app.state.access = load_access_settings()
     app.state.database_path = initialize()
     yield
 
 
 app = FastAPI(title="Support ticket queue", lifespan=lifespan)
+app.include_router(access_router)
+tickets = APIRouter(prefix="/api/tickets", dependencies=[Depends(require_access)])
 
 
 @app.get("/health")
@@ -35,7 +39,7 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.get("/api/tickets", response_model=list[Ticket])
+@tickets.get("", response_model=list[Ticket])
 def list_tickets(request: Request):
     with connect(request.app.state.database_path) as connection:
         rows = connection.execute(
@@ -44,7 +48,7 @@ def list_tickets(request: Request):
     return [dict(row) for row in rows]
 
 
-@app.post("/api/tickets", response_model=Ticket, status_code=status.HTTP_201_CREATED)
+@tickets.post("", response_model=Ticket, status_code=status.HTTP_201_CREATED)
 def create_ticket(ticket: TicketCreate, request: Request):
     with connect(request.app.state.database_path) as connection:
         row = connection.execute(
@@ -55,3 +59,6 @@ def create_ticket(ticket: TicketCreate, request: Request):
             (ticket.subject, ticket.description),
         ).fetchone()
     return dict(row)
+
+
+app.include_router(tickets)

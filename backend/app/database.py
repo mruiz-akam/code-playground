@@ -49,6 +49,14 @@ def initialize() -> Path:
             )
             """
         )
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS access_sessions (
+                session_hash TEXT PRIMARY KEY,
+                expires_at INTEGER NOT NULL
+            )
+            """
+        )
         if connection.execute("SELECT 1 FROM tickets LIMIT 1").fetchone() is None:
             connection.executemany(
                 "INSERT INTO tickets (subject, description, status) VALUES (?, ?, ?)",

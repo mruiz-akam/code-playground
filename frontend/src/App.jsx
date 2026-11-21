@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react';
+import AccessDialog from './AccessDialog.jsx';
 
 const TICKETS_URL = '/api/tickets';
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: 'medium',
   timeStyle: 'short',
 });
+
+function getAccessPrompt(response) {
+  return { allowHttp: response.headers.get('X-Devlab-Allow-Http') === '1' };
+}
 
 function TicketList({ tickets, loadFailed, onRetry }) {
   return (
@@ -49,7 +54,7 @@ function TicketList({ tickets, loadFailed, onRetry }) {
   );
 }
 
-function TicketForm({ disabled, onCreated }) {
+function TicketForm({ disabled, onCreated, onUnauthorized }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -76,6 +81,10 @@ function TicketForm({ disabled, onCreated }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subject, description }),
       });
+      if (response.status === 401) {
+        onUnauthorized(response);
+        return;
+      }
       if (!response.ok) throw new Error('Ticket could not be created');
 
       const ticket = await response.json();
@@ -117,6 +126,7 @@ function TicketForm({ disabled, onCreated }) {
 
 export default function App() {
   const [tickets, setTickets] = useState(null);
+  const [accessPrompt, setAccessPrompt] = useState(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
 
@@ -126,6 +136,11 @@ export default function App() {
     async function loadTickets() {
       try {
         const response = await fetch(TICKETS_URL, { signal: controller.signal });
+        if (controller.signal.aborted) return;
+        if (response.status === 401) {
+          setAccessPrompt(getAccessPrompt(response));
+          return;
+        }
         if (!response.ok) throw new Error('Ticket queue could not be loaded');
         const loadedTickets = await response.json();
         if (!controller.signal.aborted) setTickets(loadedTickets);
@@ -147,6 +162,16 @@ export default function App() {
     setTickets((current) => [ticket, ...current]);
   }
 
+  function openQueue() {
+    setAccessPrompt(null);
+    retryLoad();
+  }
+
+  function requireToken(response) {
+    setTickets(null);
+    setAccessPrompt(getAccessPrompt(response));
+  }
+
   return (
     <>
       <header className="page-header">
@@ -154,10 +179,18 @@ export default function App() {
           <h1>Support ticket queue</h1>
         </div>
       </header>
-      <main className="page-width layout">
-        <TicketList tickets={tickets} loadFailed={loadFailed} onRetry={retryLoad} />
-        <TicketForm disabled={tickets === null} onCreated={addTicket} />
-      </main>
+      {accessPrompt ? (
+        <AccessDialog allowHttp={accessPrompt.allowHttp} onAccess={openQueue} />
+      ) : (
+        <main className="page-width layout">
+          <TicketList tickets={tickets} loadFailed={loadFailed} onRetry={retryLoad} />
+          <TicketForm
+            disabled={tickets === null}
+            onCreated={addTicket}
+            onUnauthorized={requireToken}
+          />
+        </main>
+      )}
     </>
   );
 }

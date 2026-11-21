@@ -49,8 +49,25 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+          DEVLAB_ACCESS_TOKEN: ${{ secrets.DEVLAB_ACCESS_TOKEN }}
+          DEVLAB_ALLOW_HTTP: ${{ vars.DEVLAB_ALLOW_HTTP }}
         run: |
+          : "${DEVLAB_ACCESS_TOKEN:?Set DEVLAB_ACCESS_TOKEN in the devlab environment secrets}"
+          if [[ "$DEVLAB_ACCESS_TOKEN" == *$'\n'* || "$DEVLAB_ACCESS_TOKEN" == *$'\r'* ]]; then
+            echo 'DEVLAB_ACCESS_TOKEN must be a single line.' >&2
+            exit 1
+          fi
+          umask 077
+          access_dir=$(mktemp -d "$RUNNER_TEMP/devlab-access.XXXXXXXX")
+          trap 'rm -rf -- "$access_dir"' EXIT
+          printf 'DEVLAB_ACCESS_TOKEN=%s\n' "$DEVLAB_ACCESS_TOKEN" > "$access_dir/.env"
+          if [[ "$DEVLAB_ALLOW_HTTP" == 1 ]]; then
+            printf 'DEVLAB_ALLOW_HTTP=1\n' >> "$access_dir/.env"
+          fi
+          unset DEVLAB_ACCESS_TOKEN
+
           tar --exclude='__pycache__' -czf - \
             -C backend app requirements.txt \
-            -C "$RUNNER_TEMP" pip-bootstrap |
+            -C "$RUNNER_TEMP" pip-bootstrap \
+            -C "$access_dir" .env |
             bash .github/scripts/ssh-deploy.sh backend/deploy/release.sh
