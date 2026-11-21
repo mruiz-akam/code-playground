@@ -54,7 +54,7 @@ GitHub Actions deploys to the `devlab` lab environment. Pushes and merges to `ma
 
 For an interview branch, push your changes and open **Actions**. Choose the relevant workflow, select **Run workflow**, and choose the branch agreed with your interviewer.
 
-Open the run for your commit to check the test and deployment results. A failing test stops deployment. After the relevant workflows succeed, open the lab URL and verify your change.
+Open the run for your commit to check the test and deployment results. A failing test stops deployment. After the relevant workflows succeed, verify your change on the deployed app at [http://devlab.labs.akamaicentral.com/](http://devlab.labs.akamaicentral.com/).
 
 ## Check the backend on the VM
 
