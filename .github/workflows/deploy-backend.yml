@@ -1,0 +1,50 @@
+name: Deploy backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+      - '.github/scripts/ssh-deploy.sh'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: devlab-backend
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: devlab
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Install backend test dependencies
+        working-directory: backend
+        run: python -m pip install -r requirements-test.txt
+
+      - name: Test backend
+        working-directory: backend
+        run: python -m pytest -q
+
+      - name: Release backend to /srv/devlab
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          tar --exclude='__pycache__' -C backend -czf - app requirements.txt deploy/support-ticket-queue.service |
+            bash .github/scripts/ssh-deploy.sh backend/deploy/release.sh
