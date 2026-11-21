@@ -2,6 +2,8 @@
 
 A full-stack interview starter. The React frontend lists support tickets and lets users create new ones. FastAPI serves the API, and SQLite stores tickets between restarts. The database starts with three sample tickets, including an open and a resolved ticket.
 
+If you’re taking the interview, start with the [candidate tasks](INTERVIEW_TASKS.md).
+
 ## Run locally
 
 Use Python 3.12 and Node.js 24 to match CI. From the repository root, start FastAPI in one terminal.
