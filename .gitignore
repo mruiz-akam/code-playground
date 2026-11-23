@@ -8,3 +8,5 @@ frontend/dist/
 .DS_Store
 *.code-workspace
 /INTERVIEW_TASKS.md
+/devlab-incident.py
+/DEVLAB_INCIDENT_SOLUTIONS.md
