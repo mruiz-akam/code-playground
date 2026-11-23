@@ -13,5 +13,6 @@ test -s "$stage/index.html"
 find "$stage" -mindepth 1 -type d -exec chmod 755 {} +
 find "$stage" -type f -exec chmod 644 {} +
 rsync -r --checksum --exclude='/index.html' -- "$stage/" "$web_root/"
+clear_access_sessions
 mv -Tf -- "$stage/index.html" "$web_root/index.html"
 echo "Frontend published to $web_root."

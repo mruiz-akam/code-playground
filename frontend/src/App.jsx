@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { version } from '../package.json';
 import AccessDialog from './AccessDialog.jsx';
 
 const TICKETS_URL = '/api/tickets';
+const BUILD_VERSION = import.meta.env.VITE_BUILD_SHA?.slice(0, 7) || version;
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: 'medium',
   timeStyle: 'short',
@@ -177,6 +179,7 @@ export default function App() {
       <header className="page-header">
         <div className="page-width">
           <h1>Support ticket queue</h1>
+          <small className="build-version">Build {BUILD_VERSION}</small>
         </div>
       </header>
       {accessPrompt ? (

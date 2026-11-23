@@ -28,6 +28,20 @@ h1, h2, h3, p { margin: 0; }
   color: white;
 }
 
+.page-header .page-width {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+}
+
+.build-version {
+  color: #d3daf5;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
 h1 {
   font-size: clamp(1.7rem, 4vw, 2.35rem);
   line-height: 1.2;

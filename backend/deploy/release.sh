@@ -103,12 +103,12 @@ if ! install_dependencies "$release_dir"; then
   echo 'Could not install dependencies for the new release.' >&2
 elif activate_access_env && start_release "$release_dir" && wait_for_app &&
   [ "$(curl --noproxy '*' -s --max-time 2 -o /dev/null -w '%{http_code}' \
-    http://127.0.0.1:8000/api/tickets)" = 401 ]; then
+    http://127.0.0.1:8000/api/tickets)" = 401 ] && clear_access_sessions; then
   rm -f -- "$previous_env"
   echo 'Deployment healthy on port 8000.'
   exit 0
 else
-  echo 'Deployment failed its startup checks.' >&2
+  echo 'Deployment failed to pass its startup checks or clear access sessions.' >&2
   "$systemctl" status "$service" --no-pager --lines=15 >&2 || true
 fi
 

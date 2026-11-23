@@ -40,6 +40,8 @@ jobs:
 
       - name: Build React
         working-directory: frontend
+        env:
+          VITE_BUILD_SHA: ${{ github.sha }}
         run: npm run build
 
       - name: Publish frontend to /var/www/devlab
