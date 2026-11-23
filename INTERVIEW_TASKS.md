@@ -25,6 +25,8 @@ Configure the port 443 virtual host in Apache’s `devlab.conf` for `devlab.labs
 
 The queue already lists tickets and lets users create them. Add a way to resolve an open ticket from the list. Implement the change in React and FastAPI using the existing token access and SQLite database.
 
+Before you start implementing the Resolve action, create a feature branch from `dev`. Make your code changes on that branch. Once you’re satisfied with the results, open a pull request to merge your feature branch into `dev`.
+
 ### Expected behavior
 
 - Only open tickets show a **Resolve** button. Clicking it sends a request to FastAPI to update that ticket.
