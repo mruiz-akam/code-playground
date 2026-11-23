@@ -8,7 +8,7 @@ Use the [candidate tasks](INTERVIEW_TASKS.md) as a reference during the intervie
 
 Use Python 3.12 and Node.js 24 to match CI. From the repository root, start FastAPI in one terminal.
 
-Copy the example to `backend/.env` if you’re setting up the project for the first time. Enter the sample token `local-test-token` when the local queue prompts you.
+Copy the example to `backend/.env` if you’re setting up the project for the first time.
 
 ```sh
 cd backend
@@ -27,7 +27,13 @@ npm ci
 npm run dev
 ```
 
-Open [the ticket queue](http://127.0.0.1:5173) or [the API documentation](http://127.0.0.1:8000/docs). Vite forwards `/api` requests to FastAPI on port `8000`. The database defaults to `backend/data/tickets.sqlite3` when started as shown, and `TICKET_DB_PATH` overrides its location.
+### Verify the local integration
+
+1. With both servers running, open the [local ticket queue](http://127.0.0.1:5173). If prompted, enter `local-test-token` and click **Open queue**.
+2. In **New ticket**, enter a subject and description, then click **Create ticket**. Confirm that the new ticket appears at the top of the list with status **Open**.
+3. Refresh the page and confirm that the ticket is still there. This checks that the frontend can create and reload a ticket through the API and that the backend saves it to SQLite.
+
+Vite forwards `/api` requests to FastAPI on port `8000`. The database defaults to `backend/data/tickets.sqlite3` when started as shown, and `TICKET_DB_PATH` overrides its location. [Local API documentation](http://127.0.0.1:8000/docs)
 
 ### Run tests locally
 
