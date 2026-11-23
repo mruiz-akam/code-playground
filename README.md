@@ -2,7 +2,7 @@
 
 A full-stack interview starter. The React frontend lists support tickets and lets users create new ones. FastAPI serves the API, and SQLite stores tickets between restarts. The database starts with three sample tickets, including an open and a resolved ticket.
 
-If you’re taking the interview, start with the [candidate tasks](INTERVIEW_TASKS.md).
+Use the [candidate tasks](INTERVIEW_TASKS.md) as a reference during the interview. Your interviewer will tell you the order in which to complete the tasks.
 
 ## Run locally
 
