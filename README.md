@@ -2,8 +2,6 @@
 
 A full-stack interview starter. The React frontend lists support tickets and lets users create new ones. FastAPI serves the API, and SQLite stores tickets between restarts. The database starts with three sample tickets, including an open and a resolved ticket.
 
-Use the [candidate tasks](INTERVIEW_TASKS.md) as a reference during the interview. Your interviewer will tell you the order in which to complete the tasks.
-
 ## Run locally
 
 Use Python 3.12 and Node.js 24 to match CI. From the repository root, start FastAPI in one terminal.
@@ -65,7 +63,7 @@ GitHub Actions deploys to the `devlab` lab environment from both `dev` and `main
 
 For an interview branch, push your changes and open **Actions**. Choose the relevant workflow, select **Run workflow**, and choose the branch agreed with your interviewer.
 
-Open the run for your commit to check the test and deployment results. A failing test stops deployment. After the relevant workflows succeed, verify your change using the access token provided by your interviewer. During the HTTP exercise, open [http://devlab.labs.akamaicentral.com/](http://devlab.labs.akamaicentral.com/) when HTTP access is enabled for the lab. Once HTTPS works, open [https://devlab.labs.akamaicentral.com/](https://devlab.labs.akamaicentral.com/) and enter the token there to start an HTTPS session.
+Open the run for your commit to check the test and deployment results. A failing test stops deployment. After the relevant workflows succeed, open the lab URL provided by your interviewer and verify your change using the lab access token.
 
 ## Check the backend on the VM
 
