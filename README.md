@@ -2,6 +2,39 @@
 
 A full-stack interview starter. The React frontend lists support tickets and lets users create new ones. FastAPI serves the API, and SQLite stores tickets between restarts. The database starts with three sample tickets, including an open and a resolved ticket.
 
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph local["Local development"]
+        direction TB
+        localBrowser["Browser<br/>React UI"] <-->|"HTTP on port 5173"| vite["Vite dev server<br/>serves React"]
+        vite <-->|"Proxies /api requests"| localApi["FastAPI<br/>127.0.0.1:8000"]
+        localApi <-->|"Reads and writes"| localDb[("Local SQLite database")]
+    end
+
+    subgraph lab["Deployed lab"]
+        direction TB
+        labBrowser["Browser<br/>React UI"] <-->|"HTTP or HTTPS"| apache["Apache<br/>serves the React build"]
+        apache <-->|"Proxies /api requests"| labApi["FastAPI<br/>127.0.0.1:8000"]
+        labApi <-->|"Reads and writes"| labDb[("Lab SQLite database")]
+    end
+```
+
+### Deployed paths on the lab VM
+
+| Component | Path | Purpose |
+| --- | --- | --- |
+| Apache virtual host | `/etc/apache2/sites-available/devlab.conf` | Serves the React site and proxies `/api/` requests to FastAPI. |
+| React build | `/var/www/devlab/` | Contains the deployed `index.html` and frontend assets. |
+| systemd service | `/etc/systemd/system/support-ticket-queue.service` | Starts FastAPI on `127.0.0.1:8000` and sets the database path. |
+| Active backend release | `/srv/devlab/current/` | Symlink to the release the service is running. |
+| FastAPI entry point | `/srv/devlab/current/app/main.py` | Defines the app, health endpoint, and ticket routes. |
+| Backend releases | `/srv/devlab/releases/` | Holds release directories used for deployments and rollbacks. |
+| Python environment | `/srv/devlab/.venv/` | Contains the service’s Python interpreter and dependencies. |
+| Lab access settings | `/srv/devlab/.env` | Holds the sign-in settings loaded at startup. |
+| SQLite database | `/srv/devlab/data/tickets.sqlite3` | Stores persistent ticket data and active browser sessions. |
+
 ## Run locally
 
 Use Python 3.12 and Node.js 24 to match CI. From the repository root, start FastAPI in one terminal.
