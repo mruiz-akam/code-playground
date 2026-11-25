@@ -65,7 +65,7 @@ For an interview branch, push your changes and open **Actions**. Choose the rele
 
 Open the run for your commit to check the test and deployment results. A failing test stops deployment. After the relevant workflows succeed, open the lab URL provided by your interviewer and verify your change using the lab access token.
 
-## Check the backend on the VM
+## Check the backend on the VM (This will be performed during interview)
 
 Connect over SSH using the account and VM hostname provided by your interviewer.
 
